@@ -19,7 +19,6 @@ public class stemming {
     public void loadstemming(){
         tokenisasi ts = new tokenisasi();
         IndonesianStemmer stemmer = new IndonesianStemmer();
-        System.err.println(ts.tokens[0][900]);
         for(int i=0;i<ts.index;i++){
             String cek = stemmer.findRootWord(ts.tokens[0][i]);
             if(cek==null){
@@ -28,5 +27,12 @@ public class stemming {
             list.add(new Dog(cek, Integer.parseInt(ts.tokens[1][i])));
         }
         Collections.sort(list);
+    }
+    public String loadstemming(String data){
+        IndonesianStemmer stemmer = new IndonesianStemmer();
+        String cek = stemmer.findRootWord(data);
+        if(cek==null)
+            cek = data;
+        return cek;
     }
 }

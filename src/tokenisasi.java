@@ -27,6 +27,17 @@ public class tokenisasi {
                 index++;
             }
         }
-        System.out.println(index);
+    }
+    public String[] token(String data){
+        String[] data1 = new String[10];
+        index=0;
+        StringTokenizer token = new StringTokenizer(data);
+        while(token.hasMoreTokens()){                
+            String cek =  token.nextToken().toLowerCase();
+            if(cek!=null)
+                data1[index] = cek; 
+            index++;
+        }
+        return data1;
     }
 }

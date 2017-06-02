@@ -18,8 +18,8 @@ import java.util.ArrayList;
  * @author arifztenk
  */
 public class stopword {
-    public ArrayList<String> itemsSchool = new ArrayList<String>();
-    public String[] arr;
+    public static ArrayList<String> itemsSchool = new ArrayList<String>();
+    public static String[] arr;
     
     public void loadstopword() throws FileNotFoundException, IOException{
         FileInputStream fstream_school = new FileInputStream("stopw.txt"); 
@@ -46,5 +46,11 @@ public class stopword {
                 cw.convert[i]=cw.convert[i].replaceAll(" "+arr[l]+" ", " ");
             }
         }
+    }
+    public String stop(String data){
+        for(int l=0;l<arr.length;l++){
+            data=data.replaceAll(arr[l]+" ", null);
+        }
+        return data;
     }
 }
