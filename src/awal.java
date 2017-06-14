@@ -1,13 +1,25 @@
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import static java.util.Collections.list;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.print.attribute.standard.MediaSizeName;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.apache.tika.exception.TikaException;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.xml.sax.SAXException;
 
 /*
@@ -32,10 +44,15 @@ public class awal extends javax.swing.JFrame {
     private static stemming st = new stemming();
     private static frekuensi fr = new frekuensi();
     private static DecimalFormat df = new DecimalFormat("#.##");
+    public float pr[][] = new float[30][2];
+    public float pr1[][] = new float[30][2];
+    public int termfile;
     
     public awal() {
         initComponents();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        jrgroup.add(jr1);
+        jrgroup.add(jr2);
         
         file();
         cvwrd();
@@ -133,10 +150,10 @@ public class awal extends javax.swing.JFrame {
             tabobot.append("\n");
         }
     }
-    public void nyareh(){
+    public void nyareh(int query){
         tapencari.setText(null);
         search se = new search();
-        se.pertama(tfcari.getText());
+        se.pertama(tfcari.getText(),query);
         int termfile=0;
         for(int i=0;i<30;i++){
             if(se.nilai[i][0]>0){
@@ -156,8 +173,137 @@ public class awal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Data Ditemukan : "+termfile+" Dokumen\nPencarian Selesai!");
         else
             JOptionPane.showMessageDialog(null, "Data Tidak Ditemukan!");
-            
     }
+    public void presiandcall(){
+        tapencari.setText(null);
+        tahasil.setText(null);
+        repre.setText(null);
+        search se = new search();
+        float p1 = 0,p2 = 0,r1 = 0,r2 = 0;
+        
+        se.pertama(tfcari1.getText(),1);
+        termfile=0;
+        for(int i=0;i<30;i++){
+            if(se.nilai[i][0]>0){
+                termfile++;
+            }
+        }
+        int term=0;
+        tahasil.append("Query 1\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        tahasil.append("|\tP@K\t|\tR@K\t|\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        for(int i=0;i<termfile;i++){
+            int idx = (int) Math.round(se.nilai[i][1]);
+            repre.append("----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            repre.append("ID Doc\t\t: "+idx);
+            repre.append("\nName File\t\t: "+lf.listOfFiles[idx-1].getName());
+            repre.append("\nTotal Kesamaan kata\t: "+(int) se.nilai[i][2]);
+            repre.append("\nRangking\t\t: "+df.format(se.nilai[i][0]));
+            repre.append("\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            repre.append("\nIsi dari File\t: \n"+cw.convert[idx-1]);
+            repre.append("----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n");
+
+            int cek = JOptionPane.showConfirmDialog(null, 
+                "Apakah Document ini relevant Query1","pressision & recall", JOptionPane.YES_NO_OPTION
+            );
+            if(cek == JOptionPane.YES_OPTION)
+                term++;
+            pr[i+1][0]=(float)term/(i+1);
+            pr[i+1][1]=(float)(i+1)/termfile;
+            p1=p1+pr[i+1][0];
+            r1=r1+pr[i+1][1];
+            tahasil.append("|\t"+pr[i+1][0]+"\t|\t"+pr[i+1][1]+"\t|\n");
+            continue;
+        }
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        p1=p1/termfile;
+        r1=r1/termfile;
+        tahasil.append("Average P@K : "+p1+"\t Average R@K : "+r1+"\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n\n");
+        
+        se.pertama(tfcari1.getText(),2);
+        termfile=0;
+        for(int i=0;i<30;i++){
+            if(se.nilai[i][0]>0){
+                termfile++;
+            }
+        }
+        term=0;
+        tahasil.append("Query 2\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        tahasil.append("|\tP@K\t|\tR@K\t|\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        for(int i=0;i<termfile;i++){
+            int idx = (int) Math.round(se.nilai[i][1]);
+            repre.append("----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            repre.append("ID Doc\t\t: "+idx);
+            repre.append("\nName File\t\t: "+lf.listOfFiles[idx-1].getName());
+            repre.append("\nTotal Kesamaan kata\t: "+(int) se.nilai[i][2]);
+            repre.append("\nRangking\t\t: "+df.format(se.nilai[i][0]));
+            repre.append("\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            repre.append("\nIsi dari File\t: \n"+cw.convert[idx-1]);
+            repre.append("----------------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n");
+
+            int cek = JOptionPane.showConfirmDialog(null, 
+                "Apakah Document ini relevant Query2","pressision & recall", JOptionPane.YES_NO_OPTION
+            );
+            if(cek == JOptionPane.YES_OPTION)
+                term++;
+            pr1[i+1][0]=(float)term/(i+1);
+            pr1[i+1][1]=(float)(i+1)/termfile;
+            p2=p2+pr1[i+1][0];
+            r2=r2+pr1[i+1][1];
+            tahasil.append("|\t"+pr1[i+1][0]+"\t|\t"+pr1[i+1][1]+"\t|\n");
+            continue;
+        }
+        tahasil.append("---------------------------------------------------------------------------------------------\n");
+        p2=p2/termfile;
+        r2=r2/termfile;
+        tahasil.append("Average P@K : "+p2+"\t Average R@K : "+r2+"\n");
+        tahasil.append("---------------------------------------------------------------------------------------------\n\n");
+        tahasil.append("Average Q1&Q2 pada P@K : "+((p1+p2)/2)+"\t Average Q1&Q2 pada R@K : "+((r1+r2)/2)+"\n");
+        histogram();
+    }
+    
+    public void histogram(){
+        JFreeChart xylineChart = ChartFactory.createXYLineChart(
+         "Gambar 1" ,
+         "Recall" ,
+         "Precision" ,
+         createDatasetred(),
+         PlotOrientation.VERTICAL ,
+         true , true , false);
+         
+        ChartPanel chartPanel = new ChartPanel( xylineChart );
+        chartPanel.setSize(jPanel14.getWidth(), jPanel14.getHeight());
+        chartPanel.setVisible(true);
+        final XYPlot plot = xylineChart.getXYPlot( );
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
+        renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setSeriesPaint( 0 , Color.RED );
+        renderer.setSeriesPaint( 1 , Color.GREEN );
+        plot.setRenderer( renderer ); 
+        jPanel14.removeAll();
+        jPanel14.add(chartPanel);
+        jPanel14.repaint();
+    }
+    
+    private XYDataset createDatasetred( )
+   {
+      final XYSeries merah = new XYSeries( "P@K" ); 
+      final XYSeries hijau = new XYSeries( "R@K" ); 
+      for(int i=0;i<termfile;i++){
+          merah.add(pr[i+1][0], pr[i+1][1]);
+          hijau.add(pr1[i+1][0], pr1[i+1][1]);
+      }
+    
+      final XYSeriesCollection dataset = new XYSeriesCollection( );          
+      dataset.addSeries( merah );
+      dataset.addSeries( hijau );
+      return dataset;
+   }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -168,6 +314,8 @@ public class awal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        rbgroup2 = new javax.swing.ButtonGroup();
+        jrgroup = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
@@ -201,7 +349,20 @@ public class awal extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         tfcari = new javax.swing.JTextField();
         jbcari = new javax.swing.JButton();
+        jr1 = new javax.swing.JRadioButton();
+        jr2 = new javax.swing.JRadioButton();
         jPanel11 = new javax.swing.JPanel();
+        jPanel13 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        tfcari1 = new javax.swing.JTextField();
+        jbcari1 = new javax.swing.JButton();
+        jScrollPane9 = new javax.swing.JScrollPane();
+        repre = new javax.swing.JTextArea();
+        jPanel6 = new javax.swing.JPanel();
+        jPanel14 = new javax.swing.JPanel();
+        jPanel15 = new javax.swing.JPanel();
+        jScrollPane10 = new javax.swing.JScrollPane();
+        tahasil = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -423,31 +584,46 @@ public class awal extends javax.swing.JFrame {
             }
         });
 
+        jr1.setText("Query 1");
+
+        jr2.setText("Query 2");
+
         javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
-                .addGap(118, 118, 118)
+                .addGap(44, 44, 44)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel12Layout.createSequentialGroup()
+                        .addGap(67, 67, 67)
+                        .addComponent(jLabel3))
                     .addGroup(jPanel12Layout.createSequentialGroup()
                         .addComponent(tfcari, javax.swing.GroupLayout.PREFERRED_SIZE, 308, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jbcari, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel12Layout.createSequentialGroup()
-                        .addGap(67, 67, 67)
-                        .addComponent(jLabel3)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jbcari, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jr1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jr2, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGap(42, 42, 42))
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(tfcari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jbcari))
+                .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel12Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(tfcari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jbcari)))
+                    .addGroup(jPanel12Layout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addComponent(jr1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jr2)))
                 .addGap(28, 28, 28))
         );
 
@@ -474,18 +650,127 @@ public class awal extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Searching", jPanel10);
 
+        jPanel13.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        jLabel4.setFont(new java.awt.Font("Times New Roman", 1, 36)); // NOI18N
+        jLabel4.setText("Recall & Presision");
+
+        tfcari1.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
+        tfcari1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfcari1ActionPerformed(evt);
+            }
+        });
+
+        jbcari1.setText("Cari");
+        jbcari1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbcari1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
+        jPanel13.setLayout(jPanel13Layout);
+        jPanel13Layout.setHorizontalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel13Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel4)
+                    .addComponent(tfcari1, javax.swing.GroupLayout.PREFERRED_SIZE, 308, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jbcari1, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(229, Short.MAX_VALUE))
+        );
+        jPanel13Layout.setVerticalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel13Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(tfcari1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jbcari1))
+                .addGap(28, 28, 28))
+        );
+
+        repre.setColumns(20);
+        repre.setRows(5);
+        jScrollPane9.setViewportView(repre);
+
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
         jPanel11Layout.setHorizontalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 650, Short.MAX_VALUE)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane9))
+                .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 601, Short.MAX_VALUE)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel13, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.PREFERRED_SIZE, 448, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(29, Short.MAX_VALUE))
         );
 
-        jTabbedPane2.addTab("tab2", jPanel11);
+        jTabbedPane2.addTab("Presision & Recall", jPanel11);
+
+        javax.swing.GroupLayout jPanel14Layout = new javax.swing.GroupLayout(jPanel14);
+        jPanel14.setLayout(jPanel14Layout);
+        jPanel14Layout.setHorizontalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 480, Short.MAX_VALUE)
+        );
+        jPanel14Layout.setVerticalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 288, Short.MAX_VALUE)
+        );
+
+        tahasil.setColumns(20);
+        tahasil.setRows(5);
+        jScrollPane10.setViewportView(tahasil);
+
+        javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
+        jPanel15.setLayout(jPanel15Layout);
+        jPanel15Layout.setHorizontalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane10)
+        );
+        jPanel15Layout.setVerticalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 150, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel15, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(23, Short.MAX_VALUE))
+        );
+
+        jTabbedPane2.addTab("Perhitungan", jPanel6);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -519,12 +804,29 @@ public class awal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jbcariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbcariActionPerformed
-        nyareh();        // TODO add your handling code here:
+        
+        if(jr1.isSelected()){
+            nyareh(1);
+        }
+        else
+            nyareh(2);        // TODO add your handling code here:
     }//GEN-LAST:event_jbcariActionPerformed
 
     private void tfcariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfcariActionPerformed
-        nyareh();
+        if(jr1.isSelected()){
+            nyareh(1);
+        }
+        else
+            nyareh(2);
     }//GEN-LAST:event_tfcariActionPerformed
+
+    private void tfcari1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfcari1ActionPerformed
+        presiandcall();       // TODO add your handling code here:
+    }//GEN-LAST:event_tfcari1ActionPerformed
+
+    private void jbcari1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbcari1ActionPerformed
+        presiandcall();     // TODO add your handling code here:
+    }//GEN-LAST:event_jbcari1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -565,18 +867,24 @@ public class awal extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel12;
+    private javax.swing.JPanel jPanel13;
+    private javax.swing.JPanel jPanel14;
+    private javax.swing.JPanel jPanel15;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane10;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
@@ -584,17 +892,26 @@ public class awal extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
+    private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JButton jbcari;
+    private javax.swing.JButton jbcari1;
+    private javax.swing.JRadioButton jr1;
+    private javax.swing.JRadioButton jr2;
+    private javax.swing.ButtonGroup jrgroup;
+    private javax.swing.ButtonGroup rbgroup2;
+    private javax.swing.JTextArea repre;
     private javax.swing.JTextArea tabobot;
     private javax.swing.JTextArea taconverter;
     private javax.swing.JTextArea tafiles;
     private javax.swing.JTextArea tafrekuensi;
+    private javax.swing.JTextArea tahasil;
     private javax.swing.JTextArea tapencari;
     private javax.swing.JTextArea tastemming;
     private javax.swing.JTextArea tastopword;
     private javax.swing.JTextArea tatokenisasi;
     private javax.swing.JTextField tfcari;
+    private javax.swing.JTextField tfcari1;
     // End of variables declaration//GEN-END:variables
 }
